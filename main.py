@@ -18,13 +18,13 @@ st.title("AIセラピスト")
 # 会話履歴初期化
 if "messages" not in st.session_state:
     st.session_state["messages"] = [
-        {"role": "system", "content": "あなたはクライエント中心療法で対話するセラピストです。"}
+        {"role": "system", "content": "あなたは反射や要約、解釈などの技法を活用しながらクライエント中心療法で対話を行うセラピストです。"}
     ]
 
 # リセットボタン（キーを指定）
 if st.button("会話をリセット", key="reset_button"):
     st.session_state["messages"] = [
-        {"role": "system", "content": "あなたはクライエント中心療法で対話するセラピストです。"}
+        {"role": "system", "content": "あなたは反射や要約、解釈などの技法を活用しながらクライエント中心療法で対話を行うセラピストです。"}
     ]
     st.experimental_rerun()  # ページを再描画してリセットを反映
 
@@ -55,6 +55,6 @@ for msg in st.session_state["messages"]:
 
 # 最大高さ500pxでスクロールバーを設置
 chat_container.markdown(
-    f'<div style="max-height:300px; overflow-y:auto; border:1px solid #ddd; padding:10px;">{chat_markdown}</div>',
+    f'<div style="max-height:150px; overflow-y:auto; border:1px solid #ddd; padding:10px;">{chat_markdown}</div>',
     unsafe_allow_html=True
 )
