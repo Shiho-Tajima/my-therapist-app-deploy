@@ -74,6 +74,19 @@ with st.form(key="input_form", clear_on_submit=True):
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
+# ✅ 重要情報を保持するセッション用メモリ
+if "important_info" not in st.session_state:
+    st.session_state["important_info"] = {
+        "家族歴": "",
+        "生育歴": "",
+        "仕事": "",
+        "価値観": "",
+        "性格": "",
+        "趣味": "",
+        "生活状況": "",
+        "その他重要な情報": ""
+    }
+
 if submit_button and user_input:
     # ✅ ユーザー入力を必ず追加
     st.session_state["messages"].append({"role": "user", "content": user_input})
@@ -82,15 +95,28 @@ if submit_button and user_input:
     with st.spinner("セラピストが考えています…"):
         time.sleep(0.5)
 
-        # 過去会話から「重要情報のみ」を要約
-        def summarize_important(messages):
-            summary_prompt = "次の会話履歴から、家族歴、仕事、生育歴、性格、価値観、趣味、生活状況などカウンセリングに重要な情報だけを要約してください。文章で簡潔に出力してください。\n\n"
-            conversation_text = "\n".join([m["content"] for m in messages if m["role"]=="user"])
-            return conversation_text  # 後でLLMに渡して要約させる
+        # --- 新しい発話から重要情報を抽出してメモリ更新 ---
+        summary_response = openai.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": """
+                以下の発話からカウンセリングに重要な情報を抽出してください。
+                カテゴリは 家族歴、生育歴、仕事、価値観、性格、趣味、生活状況、その他重要な情報 に分類してください。
+                JSON で返してください。
+                """.strip()},
+                {"role": "user", "content": user_input}
+            ]
+        )
 
-        important_info = summarize_important(st.session_state["messages"][:-1])  # 直前入力以外
+        try:
+            new_summary = json.loads(summary_response.choices[0].message.content)
+            for key, value in new_summary.items():
+                if value:
+                    st.session_state["important_info"][key] = value
+        except Exception:
+            pass  # JSON 解析に失敗したらスキップ
 
-        # LLMに渡すメッセージ作成
+        # --- LLMに渡すメッセージ作成 ---
         messages_for_llm = [
             {"role": "system", "content": """
             あなたは反射や要約、解釈などの技法を活用しながらクライエント中心療法で対話を行うセラピストです。
@@ -98,17 +124,22 @@ if submit_button and user_input:
             応答は必ずユーザー向けで、独り言や内省を文章化したものは絶対に出力しないこと。
 
             # 制約事項
-            ・直近のユーザー発言と重要情報の要約のみを参照して返答すること
+            ・直近のユーザー発言と重要情報の要約、直近の会話履歴のみを参照して返答すること
             ・アドバイスや提案はクライエントが求めた場合のみ行うこと
             ・断定的な表現（～すべき）やラベル付け（（セラピスト）など）は使用しないこと
             ・応答は必ず自然な文章で、共感や質問のみで構成すること
             """}
         ]
 
-        # 直近ユーザー発言 + 重要情報を追加
-        if important_info.strip():
-            messages_for_llm.append({"role": "system", "content": f"過去の重要情報の要約:\n{important_info}"})
-        messages_for_llm.append(st.session_state["messages"][-1])  # 直近発言
+        # ✅ 重要情報メモリを追加
+        messages_for_llm.append({
+            "role": "system",
+            "content": f"クライエントに関する重要情報:\n{json.dumps(st.session_state['important_info'], ensure_ascii=False, indent=2)}"
+        })
+
+        # ✅ 直近の会話5件を追加
+        recent_msgs = st.session_state["messages"][-5:]
+        messages_for_llm.extend(recent_msgs)
 
         # LLM呼び出し
         response = openai.chat.completions.create(
@@ -166,6 +197,16 @@ if st.button("会話をクリア", key="reset_button"):
     st.session_state["messages"] = [
         {"role": "system", "content": "あなたは反射や要約、解釈などの技法を活用しながらクライエント中心療法で対話を行うセラピストです。クライエントの悩みや感情に寄り添い、共感的に対応してください。セラピスト自身が悩み相談をすることはしないでください。"}
     ]
+    st.session_state["important_info"] = {
+        "家族歴": "",
+        "生育歴": "",
+        "仕事": "",
+        "価値観": "",
+        "性格": "",
+        "趣味": "",
+        "生活状況": "",
+        "その他重要な情報": ""
+    }
     try:
         st.rerun()
     except AttributeError:
