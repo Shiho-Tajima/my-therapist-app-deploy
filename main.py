@@ -62,7 +62,7 @@ if not st.session_state["greeted"]:
     ai_img_path = os.path.join(BASE_DIR, "data", "images", "ai.png")
 
     # カラム比率1:2:1で作成
-    col1, col2, col3 = st.columns([2,1,2])
+    col1, col2, col3 = st.columns([1,1,1])
 
     with col2:
         # --- ここを修正: 幅を固定してスマホでも小さく表示 ---
@@ -106,7 +106,7 @@ if submit_button and user_input:
         st.session_state["greeted2"] = False
 
     if not st.session_state["greeted2"]:
-        message = "入力ありがとうございます！\n\nAIの回答がおかしい時などは、✅【会話をクリア】ボタンで会話をリセットもできます。"
+        message = "入力ありがとうございます！\n\nこのまま会話を続けてみましょう!\n\n【会話をクリア】ボタンで会話をリセットもできます。"
         placeholder = st.empty()
         display_text = ""
         for char in message:
