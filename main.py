@@ -41,7 +41,7 @@ BASE_DIR = os.path.dirname(__file__)
 logo_img_path = os.path.join(BASE_DIR, "data", "images", "logo.png")
 
 # カラム比率1:2:1で作成
-col1, col2 = st.columns([3,1])
+col1, col2 = st.columns([5,1])
 
 with col2:
     st.image(logo_img_path, use_container_width=True)  # 新しい推奨パラメータ
@@ -61,7 +61,7 @@ if not st.session_state["greeted"]:
     ai_img_path = os.path.join(BASE_DIR, "data", "images", "ai.png")
 
     # カラム比率1:2:1で作成
-    col1, col2, col3 = st.columns([2,1,2])
+    col1, col2, col3 = st.columns([4,1,4])
 
     with col2:
         st.image(ai_img_path, use_container_width=True)
