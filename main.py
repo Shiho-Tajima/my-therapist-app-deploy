@@ -62,7 +62,7 @@ if not st.session_state["greeted"]:
     ai_img_path = os.path.join(BASE_DIR, "data", "images", "ai.png")
 
     # カラム比率1:2:1で作成
-    col1, col2, col3 = st.columns([1,2,1])
+    col1, col2, col3 = st.columns([2,1,2])
 
     with col2:
         # --- ここを修正: 幅を固定してスマホでも小さく表示 ---
