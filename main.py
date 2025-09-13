@@ -5,19 +5,15 @@
 ############################################################
 # 1. ライブラリの読み込み
 ############################################################
-# 「.env」ファイルから環境変数を読み込むための関数
 from dotenv import load_dotenv
 import streamlit as st
 import openai
 import os
 import json
 from datetime import datetime
-from dotenv import load_dotenv
-import textwrap
 from html import escape
 import streamlit.components.v1 as components
 import time
-import streamlit as st
 
 load_dotenv()
 client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
@@ -26,7 +22,6 @@ client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 # ログイン後のメイン画面
 # **********************************************
 
-# APIキー設定
 api_key = os.environ.get("OPENAI_API_KEY")
 if not api_key:
     raise RuntimeError("OPENAI_API_KEY environment variable is not set.")
@@ -34,123 +29,94 @@ openai.api_key = api_key
 
 fine_tuned_model = "ft:gpt-4o-mini-2024-07-18:personal::CFElHbRh"
 
-
-# 画像（ロゴ）を表示
-# スクリプトの場所を基準に画像パスを作成
 BASE_DIR = os.path.dirname(__file__)
 logo_img_path = os.path.join(BASE_DIR, "data", "images", "logo.png")
 
-# カラム比率1:2:1で作成
 col1, col2 = st.columns([3,1])
-
 with col2:
-    # --- ここを修正: 幅を固定してスマホでも小さく表示 ---
-    st.image(logo_img_path, width=150)  # use_container_width=True は外す
+    st.image(logo_img_path, width=150)
 
 # **********************************************
 # チュートリアル（１）
 # **********************************************
 
-# 初期化（まだキーがなければ False を設定）
 if "greeted" not in st.session_state:
     st.session_state["greeted"] = False
 
 if not st.session_state["greeted"]:
-    st.session_state["greeted"] = False
-    # スクリプトの場所を基準に画像パスを作成
     BASE_DIR = os.path.dirname(__file__)
     ai_img_path = os.path.join(BASE_DIR, "data", "images", "ai.png")
-
-    # カラム比率1:2:1で作成
     col1, col2, col3 = st.columns([2,1,2])
-
     with col2:
-        # --- ここを修正: 幅を固定してスマホでも小さく表示 ---
-        st.image(ai_img_path, width=150)  # use_container_width=True は外す
+        st.image(ai_img_path, width=150)
         
     message = "こんにちは、私はあなたのセラピストです。どんなことでも構いませんので、気軽にお話しくださいね。\n\n以下に何か入力して、送信をしてみてください。"
-
-    # プレースホルダー作成
     placeholder = st.empty()
-
-    # 表示用文字列
     display_text = ""
-
     for char in message:
         display_text += char
-        placeholder.info(display_text, icon=":material/info:")  # st.info をプレースホルダーで更新
+        placeholder.info(display_text, icon=":material/info:")
         time.sleep(0.05)
     
     st.session_state["greeted"] = True
-
-    # 空行で間隔を作る
     st.write("")
-
 
 # **********************************************
 # 入力、送信ボタン、会話履歴表示
 # **********************************************
 
-# --- ユーザー入力フォーム ---
 with st.form(key="input_form", clear_on_submit=True):
-    user_input = st.text_input("相談内容を入力してください。\n\n（例: 仕事のストレスについて相談したいです。）")
+    user_input = st.text_input(
+        "相談内容を入力してください。\n\n（例: 仕事のストレスについて相談したいです。）"
+    )
     submit_button = st.form_submit_button("送信")
 
-# --- セッションステートの初期化 ---
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
 if submit_button and user_input:
-    # # --- チュートリアル（２） ---
-    # if "greeted2" not in st.session_state:
-    #     st.session_state["greeted2"] = False
-
-    # if not st.session_state["greeted2"]:
-    #     message = "入力ありがとうございます！\n\nもう一度入力して、このまま会話を続けてみましょう!\n\n【会話をクリア】ボタンで会話をリセットもできますよ。"
-    #     placeholder = st.empty()
-    #     display_text = ""
-    #     for char in message:
-    #         display_text += char
-    #         placeholder.info(display_text, icon=":material/info:")
-    #         time.sleep(0.05)
-
-    #     st.session_state["greeted2"] = True
-    #     st.write("")
-
-    # ✅ ユーザーの入力は必ず追加する
+    # ✅ ユーザー入力を必ず追加
     st.session_state["messages"].append({"role": "user", "content": user_input})
-
 
 if submit_button and user_input:
     with st.spinner("セラピストが考えています…"):
         time.sleep(0.5)
 
-        if "messages" not in st.session_state:
-            st.session_state["messages"] = []
-        messages_for_llm = st.session_state["messages"].copy()
+        # 過去会話から「重要情報のみ」を要約
+        def summarize_important(messages):
+            summary_prompt = "次の会話履歴から、家族歴、仕事、生育歴、性格、価値観、趣味、生活状況などカウンセリングに重要な情報だけを要約してください。文章で簡潔に出力してください。\n\n"
+            conversation_text = "\n".join([m["content"] for m in messages if m["role"]=="user"])
+            return conversation_text  # 後でLLMに渡して要約させる
 
-        # --- system メッセージで振る舞い方を指示 ---
-        messages_for_llm.append({
-            "role": "system",
-            "content": """
+        important_info = summarize_important(st.session_state["messages"][:-1])  # 直前入力以外
+
+        # LLMに渡すメッセージ作成
+        messages_for_llm = [
+            {"role": "system", "content": """
             あなたは反射や要約、解釈などの技法を活用しながらクライエント中心療法で対話を行うセラピストです。
-            クライエントの悩みや感情に寄り添い、共感的に対話をしてください。
-            応答の際に「（セラピスト）」や「（クライエント）」のようなラベルは付けず、
-            実際に温厚で優しい人が話しているような、自然な文章だけで返答してください。
+            クライエントの悩みや感情に寄り添い、共感的に対話してください。
+            応答は必ずユーザー向けで、独り言や内省を文章化したものは絶対に出力しないこと。
 
             # 制約事項
-            ・積極的な問題解決を促すのではなく、クライエントの感情に寄り添い、共感的に対応すること。
-            ・「～するべき」など断定的な言い方はしないこと。
-            """
-        })
+            ・直近のユーザー発言と重要情報の要約のみを参照して返答すること
+            ・アドバイスや提案はクライエントが求めた場合のみ行うこと
+            ・断定的な表現（～すべき）やラベル付け（（セラピスト）など）は使用しないこと
+            ・応答は必ず自然な文章で、共感や質問のみで構成すること
+            """}
+        ]
 
+        # 直近ユーザー発言 + 重要情報を追加
+        if important_info.strip():
+            messages_for_llm.append({"role": "system", "content": f"過去の重要情報の要約:\n{important_info}"})
+        messages_for_llm.append(st.session_state["messages"][-1])  # 直近発言
+
+        # LLM呼び出し
         response = openai.chat.completions.create(
             model=fine_tuned_model,
             messages=messages_for_llm
         )
         assistant_reply = response.choices[0].message.content
         st.session_state["messages"].append({"role": "assistant", "content": assistant_reply})
-
 
 # --- 会話履歴表示 ---
 chat_container = st.container()
@@ -196,9 +162,7 @@ components.html(
 
 # 会話クリアボタン
 if st.button("会話をクリア", key="reset_button"):
-    # 新しいセッションIDを生成
     st.session_state["session_id"] = datetime.now().strftime("%Y%m%d-%H%M%S")
-    # メッセージ履歴を初期化（システムメッセージのみ）
     st.session_state["messages"] = [
         {"role": "system", "content": "あなたは反射や要約、解釈などの技法を活用しながらクライエント中心療法で対話を行うセラピストです。クライエントの悩みや感情に寄り添い、共感的に対応してください。セラピスト自身が悩み相談をすることはしないでください。"}
     ]
@@ -207,6 +171,8 @@ if st.button("会話をクリア", key="reset_button"):
     except AttributeError:
         pass
 
+st.write("")
+st.write("")
 st.write("")
 st.write("")
 st.write("")
