@@ -45,7 +45,7 @@ col1, col2 = st.columns([3,1])
 
 with col2:
     # --- ここを修正: 幅を固定してスマホでも小さく表示 ---
-    st.image(logo_img_path, width=120)  # use_container_width=True は外す
+    st.image(logo_img_path, width=150)  # use_container_width=True は外す
 
 # **********************************************
 # チュートリアル（１）
