@@ -148,20 +148,6 @@ if submit_button and user_input:
         st.session_state["messages"].append({"role": "assistant", "content": assistant_reply})
 
 
-# 会話クリアボタン
-if st.button("会話をクリア", key="reset_button"):
-    # 新しいセッションIDを生成
-    st.session_state["session_id"] = datetime.now().strftime("%Y%m%d-%H%M%S")
-    # メッセージ履歴を初期化（システムメッセージのみ）
-    st.session_state["messages"] = [
-        {"role": "system", "content": "あなたは反射や要約、解釈などの技法を活用しながらクライエント中心療法で対話を行うセラピストです。クライエントの悩みや感情に寄り添い、共感的に対応してください。セラピスト自身が悩み相談をすることはしないでください。"}
-    ]
-    try:
-        st.rerun()
-    except AttributeError:
-        pass
-
-
 # --- 会話履歴表示 ---
 chat_container = st.container()
 chat_html_parts = []
@@ -203,3 +189,16 @@ components.html(
     """,
     height=170,
 )
+
+# 会話クリアボタン
+if st.button("会話をクリア", key="reset_button"):
+    # 新しいセッションIDを生成
+    st.session_state["session_id"] = datetime.now().strftime("%Y%m%d-%H%M%S")
+    # メッセージ履歴を初期化（システムメッセージのみ）
+    st.session_state["messages"] = [
+        {"role": "system", "content": "あなたは反射や要約、解釈などの技法を活用しながらクライエント中心療法で対話を行うセラピストです。クライエントの悩みや感情に寄り添い、共感的に対応してください。セラピスト自身が悩み相談をすることはしないでください。"}
+    ]
+    try:
+        st.rerun()
+    except AttributeError:
+        pass
