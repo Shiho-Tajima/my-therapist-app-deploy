@@ -106,7 +106,7 @@ if submit_button and user_input:
         st.session_state["greeted2"] = False
 
     if not st.session_state["greeted2"]:
-        message = "入力ありがとうございます！\n\nこのまま会話を続けてみましょう!\n\n【会話をクリア】ボタンで会話をリセットもできます。"
+        message = "入力ありがとうございます！\n\nもう一度入力して、このまま会話を続けてみましょう!\n\n【会話をクリア】ボタンで会話をリセットもできます。"
         placeholder = st.empty()
         display_text = ""
         for char in message:
