@@ -68,7 +68,7 @@ if not st.session_state["greeted"]:
         # --- ここを修正: 幅を固定してスマホでも小さく表示 ---
         st.image(ai_img_path, width=150)  # use_container_width=True は外す
         
-    message = "こんにちは、私はあなたのセラピストです。どんなことでも構いませんので、気軽にお話しくださいね。\n\n試しに以下に何か入力して送信をしてみてください。"
+    message = "こんにちは、私はあなたのセラピストです。どんなことでも構いませんので、気軽にお話しくださいね。\n\n以下に何か入力して、送信をしてみてください。"
 
     # プレースホルダー作成
     placeholder = st.empty()
@@ -101,21 +101,21 @@ if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
 if submit_button and user_input:
-    # --- チュートリアル（２） ---
-    if "greeted2" not in st.session_state:
-        st.session_state["greeted2"] = False
+    # # --- チュートリアル（２） ---
+    # if "greeted2" not in st.session_state:
+    #     st.session_state["greeted2"] = False
 
-    if not st.session_state["greeted2"]:
-        message = "入力ありがとうございます！\n\nもう一度入力して、このまま会話を続けてみましょう!\n\n【会話をクリア】ボタンで会話をリセットもできますよ。"
-        placeholder = st.empty()
-        display_text = ""
-        for char in message:
-            display_text += char
-            placeholder.info(display_text, icon=":material/info:")
-            time.sleep(0.05)
+    # if not st.session_state["greeted2"]:
+    #     message = "入力ありがとうございます！\n\nもう一度入力して、このまま会話を続けてみましょう!\n\n【会話をクリア】ボタンで会話をリセットもできますよ。"
+    #     placeholder = st.empty()
+    #     display_text = ""
+    #     for char in message:
+    #         display_text += char
+    #         placeholder.info(display_text, icon=":material/info:")
+    #         time.sleep(0.05)
 
-        st.session_state["greeted2"] = True
-        st.write("")
+    #     st.session_state["greeted2"] = True
+    #     st.write("")
 
     # ✅ ユーザーの入力は必ず追加する
     st.session_state["messages"].append({"role": "user", "content": user_input})
