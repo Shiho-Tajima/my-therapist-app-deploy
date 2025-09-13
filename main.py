@@ -202,3 +202,7 @@ if st.button("会話をクリア", key="reset_button"):
         st.rerun()
     except AttributeError:
         pass
+
+st.write("")
+st.write("")
+st.write("")
