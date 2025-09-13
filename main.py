@@ -17,8 +17,6 @@ import textwrap
 from html import escape
 import streamlit.components.v1 as components
 import time
-import chromadb
-from chromadb.utils import embedding_functions
 import streamlit as st
 
 load_dotenv()
